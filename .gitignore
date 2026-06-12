@@ -91,3 +91,8 @@ tmp/
 .omx/
 .opencode/
 bunx-*/
+
+.codex
+.github/skills
+.github/prompts/opsx*
+openspec

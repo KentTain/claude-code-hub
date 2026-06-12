@@ -385,6 +385,7 @@ export async function getProviders(): Promise<ProviderDisplay[]> {
         todayCallCount: stats?.today_calls ?? 0,
         lastCallTime: lastCallTimeStr,
         lastCallModel: stats?.last_call_model ?? null,
+        upstreamFormat: provider.upstreamFormat,
       };
     });
 

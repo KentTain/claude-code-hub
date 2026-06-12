@@ -12,7 +12,7 @@ import type { CacheTtlResolved } from "@/types/cache";
 import type { Key } from "@/types/key";
 import type { ProviderChainItem } from "@/types/message";
 import type { ModelPriceData } from "@/types/model-price";
-import type { Provider, ProviderType } from "@/types/provider";
+import type { Provider, ProviderType, UpstreamFormat } from "@/types/provider";
 import type { SpecialSetting } from "@/types/special-settings";
 import type { BillingModelSource, CodexPriorityBillingSource } from "@/types/system-config";
 import type { User } from "@/types/user";
@@ -128,6 +128,10 @@ export class ProxySession {
 
   // 请求格式追踪：记录原始请求格式和供应商类型
   originalFormat: ClientFormat = "claude";
+
+  // 上游 API 格式（用于格式转换）
+  upstreamFormat: UpstreamFormat = "response";
+  needsFormatTransform: boolean = false;
   providerType: ProviderType | null = null;
 
   private readonly endpointPolicy: EndpointPolicy;
@@ -346,6 +350,13 @@ export class ProxySession {
     this.provider = provider;
     if (provider) {
       this.providerType = provider.providerType as ProviderType;
+      // 设置格式转换标记：优先显式配置，其次按 providerType 推导
+      this.upstreamFormat = provider.upstreamFormat
+        ?? (provider.providerType === "openai-compatible" ? "chatcompletions" : "response");
+      this.needsFormatTransform = this.upstreamFormat === "chatcompletions";
+    } else {
+      this.upstreamFormat = "response";
+      this.needsFormatTransform = false;
     }
   }
 

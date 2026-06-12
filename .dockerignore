@@ -32,3 +32,6 @@ data/postgres-dev
 
 # Documentation submodule (not needed in container)
 docs-site
+
+.codex
+openspec

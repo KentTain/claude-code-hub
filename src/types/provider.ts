@@ -9,6 +9,11 @@ export type ProviderType =
   | "gemini"
   | "gemini-cli"
   | "openai-compatible";
+// 上游供应商支持的 API 格式
+// - "response": 支持 Response API 格式（默认）
+// - "chatcompletions": 仅支持 Chat Completions 格式，需要格式转换
+export type UpstreamFormat = "response" | "chatcompletions";
+
 
 // Codex（Responses API）请求参数覆写偏好
 // - "inherit": 遵循客户端请求（默认）
@@ -323,6 +328,11 @@ export interface Provider {
 
   // 供应商类型：扩展支持 4 种类型
   providerType: ProviderType;
+  // 上游 API 格式：用于判断是否需要格式转换
+  // - "response": 支持 Response API 格式（默认，无需转换）
+  // - "chatcompletions": 仅支持 Chat Completions 格式，需要转换
+  upstreamFormat: UpstreamFormat;
+
   // 是否透传客户端 IP
   preserveClientIp: boolean;
   // 是否跳过当前供应商的 sticky session 复用
@@ -443,6 +453,11 @@ export interface ProviderDisplay {
   groupTag: string | null;
   // 供应商类型
   providerType: ProviderType;
+  // 上游 API 格式：用于判断是否需要格式转换
+  // - "response": 支持 Response API 格式（默认，无需转换）
+  // - "chatcompletions": 仅支持 Chat Completions 格式，需要转换
+  upstreamFormat: UpstreamFormat;
+
   // 供应商聚合实体（按官网域名归一）
   providerVendorId: number | null;
   // 是否透传客户端 IP
@@ -724,6 +739,8 @@ export interface ProviderVendor {
   faviconUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
+  // 上游 API 格式（仅用于供应商级别默认值）
+  upstreamFormat?: UpstreamFormat;
 }
 
 export type ProviderEndpointProbeSource = "scheduled" | "manual" | "runtime";
@@ -732,6 +749,11 @@ export interface ProviderEndpoint {
   id: number;
   vendorId: number;
   providerType: ProviderType;
+  // 上游 API 格式：用于判断是否需要格式转换
+  // - "response": 支持 Response API 格式（默认，无需转换）
+  // - "chatcompletions": 仅支持 Chat Completions 格式，需要转换
+  upstreamFormat: UpstreamFormat;
+
   url: string;
   label: string | null;
   sortOrder: number;

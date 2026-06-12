@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 
 # 构建阶段：使用 Bun（快速包管理和构建）
 FROM --platform=$BUILDPLATFORM oven/bun:debian AS build-base
@@ -41,7 +40,9 @@ WORKDIR /app
 # 安装 PostgreSQL 18 客户端工具（用于数据库备份/恢复功能）和 curl（用于健康检查）
 # node:trixie-slim 基于 Debian Trixie，默认只有 PostgreSQL 17.x
 # 使用 PostgreSQL 官方仓库安装 18.x 以匹配 docker-compose 中的 postgres:18
-RUN apt-get update && \
+# 增加 apt Acquire 重试以应对 CDN 间歇性 502
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
+    apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/pgdg.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \

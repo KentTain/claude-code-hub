@@ -91,6 +91,7 @@ import {
 } from "./openai-image-compat";
 import { ProxyProviderResolver } from "./provider-selector";
 import { finalizeHedgeLoserBilling } from "./response-handler";
+import { transformRequestToChatCompletions } from "../format-adapter";
 import type { ProxySession } from "./session";
 import { setDeferredStreamingFinalization } from "./stream-finalization";
 import {
@@ -2827,7 +2828,28 @@ export class ProxyForwarder {
             throw new ProxyError(validation.message ?? "Invalid request.", 400);
           }
 
-          const bodyString = JSON.stringify(messageToSend);
+          // 格式转换：Response API -> Chat Completions
+          let bodyToSerialize = messageToSend;
+          if (session.needsFormatTransform) {
+            try {
+              bodyToSerialize = transformRequestToChatCompletions(
+                messageToSend as unknown as Parameters<typeof transformRequestToChatCompletions>[0]
+              );
+              logger.debug("ProxyForwarder: Request body transformed to Chat Completions", {
+                providerId: provider.id,
+                providerName: provider.name,
+                upstreamFormat: session.upstreamFormat,
+              });
+            } catch (error) {
+              logger.error("ProxyForwarder: Failed to transform request body", {
+                error: error instanceof Error ? error.message : String(error),
+                providerId: provider.id,
+              });
+              // 转换失败时继续使用原始请求体
+            }
+          }
+
+          const bodyString = JSON.stringify(bodyToSerialize);
           requestBody = bodyString;
           session.forwardedRequestBody = bodyString;
 

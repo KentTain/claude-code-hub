@@ -189,6 +189,7 @@ function toProviderVendor(row: any): ProviderVendor {
     websiteUrl: row.websiteUrl ?? null,
     faviconUrl: row.faviconUrl ?? null,
     createdAt: toDate(row.createdAt),
+    upstreamFormat: row.upstreamFormat ?? "response",
     updatedAt: toDate(row.updatedAt),
   };
 }
@@ -210,6 +211,8 @@ function toProviderEndpoint(row: any): ProviderEndpoint {
     lastProbeErrorType: row.lastProbeErrorType ?? null,
     lastProbeErrorMessage: row.lastProbeErrorMessage ?? null,
     createdAt: toDate(row.createdAt),
+    upstreamFormat: row.upstreamFormat
+      ?? (row.providerType === "openai-compatible" ? "chatcompletions" : "response"),
     updatedAt: toDate(row.updatedAt),
     deletedAt: toNullableDate(row.deletedAt),
   };

@@ -47,6 +47,8 @@ import type { SessionUsageUpdate } from "@/types/session";
 import type { LongContextPricingSpecialSetting } from "@/types/special-settings";
 import { GeminiAdapter } from "../gemini/adapter";
 import type { GeminiResponse } from "../gemini/types";
+import { transformResponse, transformErrorRuntime } from "../format-adapter";
+import { createSseTransformStream } from "../format-adapter";
 import { extractActualResponseModelForProvider } from "./actual-response-model";
 import { bindClientAbortListener } from "./client-abort-listener";
 import { isClientAbortError, isTransportError } from "./errors";
@@ -1267,6 +1269,51 @@ export class ProxyResponseHandler {
       }
     }
 
+    // 格式转换：Chat Completions -> Response API（非流式）
+    if (session.needsFormatTransform) {
+      try {
+        const responseForTransform = response.clone();
+        const responseText = await responseForTransform.text();
+        const statusCode = response.status;
+
+        if (statusCode >= 200 && statusCode < 300) {
+          // 成功响应转换
+          const responseData = JSON.parse(responseText);
+          const transformed = transformResponse(responseData);
+          finalResponse = new Response(JSON.stringify(transformed), {
+            status: response.status,
+            statusText: response.statusText,
+            headers: cleanResponseHeaders(response.headers),
+          });
+          logger.debug("[ResponseHandler] Transformed Chat Completions non-stream response", {
+            providerId: provider.id,
+            providerName: provider.name,
+            statusCode,
+          });
+        } else {
+          // 错误响应转换
+          const errorData = JSON.parse(responseText);
+          const transformed = transformErrorRuntime(errorData);
+          finalResponse = new Response(JSON.stringify(transformed), {
+            status: response.status,
+            statusText: response.statusText,
+            headers: cleanResponseHeaders(response.headers),
+          });
+          logger.debug("[ResponseHandler] Transformed Chat Completions error response", {
+            providerId: provider.id,
+            providerName: provider.name,
+            statusCode,
+          });
+        }
+      } catch (error) {
+        logger.error("[ResponseHandler] Failed to transform Chat Completions response", {
+          error: error instanceof Error ? error.message : String(error),
+          providerId: provider.id,
+        });
+        // 转换失败时保留原始响应
+      }
+    }
+
     // 使用 AsyncTaskManager 管理后台处理任务
     const taskId = `non-stream-${messageContext?.id || `unknown-${Date.now()}`}`;
     const abortController = new AbortController();
@@ -2299,6 +2346,11 @@ export class ProxyResponseHandler {
         processedStream = response.body.pipeThrough(transformStream);
       }
     }
+    // SSE: Chat Completions -> Response API 流格式转换
+    if (session.needsFormatTransform) {
+      processedStream = processedStream.pipeThrough(createSseTransformStream());
+    }
+
 
     // ⭐ 使用 TransformStream 包装流，以便在 idle timeout 时能关闭客户端流
     // 这解决了 tee() 后 internalStream abort 不影响 clientStream 的问题
