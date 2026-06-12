@@ -114,7 +114,7 @@ function checkFormatProviderTypeCompatibility(
     case "claude":
       return providerType === "claude" || providerType === "claude-auth";
     case "response":
-      return providerType === "codex";
+      return providerType === "codex" || providerType === "openai-compatible";
     case "openai":
       return providerType === "openai-compatible";
     case "gemini":
