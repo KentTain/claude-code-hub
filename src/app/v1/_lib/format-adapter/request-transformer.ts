@@ -47,7 +47,9 @@ export function transformRequestToChatCompletions(
   }
 
   // 2. input[] -> messages[]
-  for (const item of request.input) {
+  // 防御性检查：确保 input 是数组
+  const inputArray = Array.isArray(request.input) ? request.input : [];
+  for (const item of inputArray) {
     const msg = transformInputItem(item);
     if (msg) {
       if (Array.isArray(msg)) {
