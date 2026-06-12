@@ -112,6 +112,22 @@ export function buildProxyUrl(baseUrl: string, requestUrl: URL): string {
     const basePath = baseUrlObj.pathname.replace(/\/$/, ""); // 移除末尾斜杠
     const requestPath = requestUrl.pathname; // 原始请求路径（如 /v1/messages）
 
+    // Case 0: baseUrl 已包含任意目标端点路径，直接使用 baseUrl（不再追加）
+    // 例如：baseUrl = https://xxx.com/v2/coding/chat/completions
+    //       requestPath = /v1/responses（格式转换后会变成 chat/completions 请求）
+    for (const { endpoint } of endpointRegexes) {
+      if (basePath.endsWith(endpoint)) {
+        logger.debug("[buildProxyUrl] baseUrl already contains endpoint, using directly", {
+          basePath,
+          endpoint,
+          requestPath,
+          action: "use_base_url_as_is",
+        });
+        baseUrlObj.search = requestUrl.search;
+        return baseUrlObj.toString();
+      }
+    }
+
     // Case 1: baseUrl 已是 requestPath 的前缀（例如 base=/v1/messages, req=/v1/messages/count_tokens）
     // 直接使用 requestPath，避免丢失子路径。
     if (requestPath === basePath || requestPath.startsWith(`${basePath}/`)) {
