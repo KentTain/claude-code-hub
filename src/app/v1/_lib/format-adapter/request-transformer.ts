@@ -47,8 +47,15 @@ export function transformRequestToChatCompletions(
   }
 
   // 2. input[] -> messages[]
-  // 防御性检查：确保 input 是数组
+  // input 应该已被 response-input-rectifier 规范化为数组
+  // 如果仍是非数组，说明上游处理异常，记录警告并尝试兼容
   const inputArray = Array.isArray(request.input) ? request.input : [];
+  if (!Array.isArray(request.input) && request.input !== undefined) {
+    logger.warn("[transformRequestToChatCompletions] input is not an array, this may indicate upstream processing issue", {
+      inputType: typeof request.input,
+      input: typeof request.input === 'string' ? request.input.slice(0, 100) : request.input,
+    });
+  }
   for (const item of inputArray) {
     const msg = transformInputItem(item);
     if (msg) {
