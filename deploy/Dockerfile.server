@@ -1,0 +1,55 @@
+
+# 构建阶段：使用 Node.js + pnpm（阿里云镜像）
+FROM --platform=$BUILDPLATFORM registry.cn-zhangjiakou.aliyuncs.com/kcloudy-images/node:20-bookworm-slim AS build-base
+WORKDIR /app
+
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+FROM build-base AS deps
+COPY package.json ./
+RUN pnpm install
+
+FROM deps AS build
+COPY . .
+
+# 接收构建参数
+ARG APP_VERSION=dev
+
+# 设置为环境变量供 Next.js 使用
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
+
+# 构建时需要的环境变量 (避免数据库初始化错误)
+# 这些是占位符,实际运行时会被真实值覆盖
+ENV DSN="postgres://placeholder:placeholder@localhost:5432/placeholder"
+ENV REDIS_URL="redis://localhost:6379"
+# 标记为 CI 环境，跳过 instrumentation.ts 中的数据库连接
+ENV CI=true
+
+RUN pnpm run build
+
+# 运行阶段：使用 Node.js
+FROM registry.cn-zhangjiakou.aliyuncs.com/kcloudy-images/node:20-bookworm-slim AS runner
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+ENV HOSTNAME=0.0.0.0
+WORKDIR /app
+
+# 安装 curl（用于健康检查）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/drizzle ./drizzle
+COPY --from=build --chown=node:node /app/messages ./messages
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/server ./.next/server
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+
+USER node
+EXPOSE 3000
+
+CMD ["node", "server.js"]
