@@ -504,6 +504,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/providers/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run provider test by id
+         * @description Runs the unified relay-style provider API test against a stored provider using its saved credentials and proxy configuration.
+         */
+        post: operations["postProvidersByIdTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/providers/test:anthropic-messages": {
         parameters: {
             query?: never;
@@ -8971,6 +8991,189 @@ export interface operations {
                     customHeaders?: {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+        responses: {
+            /** @description Unified test result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Invalid request. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @description Stable problem type URI or URN. */
+                        type: string;
+                        /** @description Short problem title. */
+                        title: string;
+                        /** @description HTTP status code. */
+                        status: number;
+                        /** @description Human-readable error detail. */
+                        detail: string;
+                        /** @description Request path that produced the problem. */
+                        instance: string;
+                        /** @description Application error code for frontend i18n. */
+                        errorCode: string;
+                        /** @description Optional i18n parameters. */
+                        errorParams?: {
+                            [key: string]: unknown;
+                        };
+                        /** @description Optional request trace identifier. */
+                        traceId?: string;
+                        /** @description Validation failure details. */
+                        invalidParams?: {
+                            /** @description Path to the invalid input field. */
+                            path: (string | number)[];
+                            /** @description Machine-readable validation error code. */
+                            code: string;
+                            /** @description Validation error message. */
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Authentication required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @description Stable problem type URI or URN. */
+                        type: string;
+                        /** @description Short problem title. */
+                        title: string;
+                        /** @description HTTP status code. */
+                        status: number;
+                        /** @description Human-readable error detail. */
+                        detail: string;
+                        /** @description Request path that produced the problem. */
+                        instance: string;
+                        /** @description Application error code for frontend i18n. */
+                        errorCode: string;
+                        /** @description Optional i18n parameters. */
+                        errorParams?: {
+                            [key: string]: unknown;
+                        };
+                        /** @description Optional request trace identifier. */
+                        traceId?: string;
+                        /** @description Validation failure details. */
+                        invalidParams?: {
+                            /** @description Path to the invalid input field. */
+                            path: (string | number)[];
+                            /** @description Machine-readable validation error code. */
+                            code: string;
+                            /** @description Validation error message. */
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Admin access required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @description Stable problem type URI or URN. */
+                        type: string;
+                        /** @description Short problem title. */
+                        title: string;
+                        /** @description HTTP status code. */
+                        status: number;
+                        /** @description Human-readable error detail. */
+                        detail: string;
+                        /** @description Request path that produced the problem. */
+                        instance: string;
+                        /** @description Application error code for frontend i18n. */
+                        errorCode: string;
+                        /** @description Optional i18n parameters. */
+                        errorParams?: {
+                            [key: string]: unknown;
+                        };
+                        /** @description Optional request trace identifier. */
+                        traceId?: string;
+                        /** @description Validation failure details. */
+                        invalidParams?: {
+                            /** @description Path to the invalid input field. */
+                            path: (string | number)[];
+                            /** @description Machine-readable validation error code. */
+                            code: string;
+                            /** @description Validation error message. */
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Provider not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** @description Stable problem type URI or URN. */
+                        type: string;
+                        /** @description Short problem title. */
+                        title: string;
+                        /** @description HTTP status code. */
+                        status: number;
+                        /** @description Human-readable error detail. */
+                        detail: string;
+                        /** @description Request path that produced the problem. */
+                        instance: string;
+                        /** @description Application error code for frontend i18n. */
+                        errorCode: string;
+                        /** @description Optional i18n parameters. */
+                        errorParams?: {
+                            [key: string]: unknown;
+                        };
+                        /** @description Optional request trace identifier. */
+                        traceId?: string;
+                        /** @description Validation failure details. */
+                        invalidParams?: {
+                            /** @description Path to the invalid input field. */
+                            path: (string | number)[];
+                            /** @description Machine-readable validation error code. */
+                            code: string;
+                            /** @description Validation error message. */
+                            message: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    postProvidersByIdTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required only when authenticating with the auth-token cookie on mutation requests. */
+                "X-CCH-CSRF"?: string;
+            };
+            path: {
+                /** @description Provider id. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Optional model override. */
+                    model?: string;
                 };
             };
         };
@@ -35092,6 +35295,8 @@ export interface operations {
                 providerId?: number | null;
                 /** @description Model filter. */
                 model?: string;
+                /** @description Only include records whose requested model differs from the actual response model. */
+                actualResponseModelMismatch?: "true" | "false" | boolean;
                 /** @description HTTP status code filter. */
                 statusCode?: number | null;
                 /** @description Exclude successful responses. */
@@ -35295,6 +35500,8 @@ export interface operations {
                 providerId?: number | null;
                 /** @description Model filter. */
                 model?: string;
+                /** @description Only include records whose requested model differs from the actual response model. */
+                actualResponseModelMismatch?: "true" | "false" | boolean;
                 /** @description HTTP status code filter. */
                 statusCode?: number | null;
                 /** @description Exclude successful responses. */
@@ -36363,6 +36570,8 @@ export interface operations {
                     providerId?: number | null;
                     /** @description Model filter. */
                     model?: string;
+                    /** @description Only include records whose requested model differs from the actual response model. */
+                    actualResponseModelMismatch?: "true" | "false" | boolean;
                     /** @description HTTP status code filter. */
                     statusCode?: number | null;
                     /** @description Exclude successful responses. */
@@ -37439,6 +37648,8 @@ export interface operations {
                 sessionId?: string;
                 /** @description Model filter. */
                 model?: string;
+                /** @description Only include records whose requested model differs from the actual response model. */
+                actualResponseModelMismatch?: "true" | "false" | boolean;
                 /** @description HTTP status code filter. */
                 statusCode?: number | null;
                 /** @description Exclude successful responses. */
@@ -37640,6 +37851,8 @@ export interface operations {
                 sessionId?: string;
                 /** @description Model filter. */
                 model?: string;
+                /** @description Only include records whose requested model differs from the actual response model. */
+                actualResponseModelMismatch?: "true" | "false" | boolean;
                 /** @description HTTP status code filter. */
                 statusCode?: number | null;
                 /** @description Exclude successful responses. */
